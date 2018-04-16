@@ -58,7 +58,8 @@ message Server {
  * A stable configuraton, in which a simple majority constitutes a quorum.
  */
 message SimpleConfiguration {
-    repeated Server servers = 1;
+    required uint64 q2 = 1;
+    repeated Server servers = 2;
 }
 
 /**

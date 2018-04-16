@@ -44,17 +44,19 @@ class OptionParser {
         , argv(argv)
         , cluster("logcabin:5254")
         , logPolicy("")
+        , q2(0)
         , servers()
     {
         while (true) {
             static struct option longOptions[] = {
                {"cluster",  required_argument, NULL, 'c'},
+               {"q2",  required_argument, NULL, 'q'},
                {"help",  no_argument, NULL, 'h'},
                {"verbose",  no_argument, NULL, 'v'},
                {"verbosity",  required_argument, NULL, 256},
                {0, 0, 0, 0}
             };
-            int c = getopt_long(argc, argv, "c:hv", longOptions, NULL);
+            int c = getopt_long(argc, argv, "cq:hv", longOptions, NULL);
 
             // Detect the end of the options.
             if (c == -1)
@@ -64,6 +66,8 @@ class OptionParser {
                 case 'c':
                     cluster = optarg;
                     break;
+                case 'q':
+                    q2 = atol(optarg);
                 case 'h':
                     usage();
                     exit(0);
@@ -161,6 +165,7 @@ class OptionParser {
     char**& argv;
     std::string cluster;
     std::string logPolicy;
+    uint64_t q2;
     std::vector<std::string> servers;
 };
 
@@ -168,8 +173,9 @@ void
 printConfiguration(const std::pair<uint64_t, Configuration>& configuration)
 {
     std::cout << "Configuration " << configuration.first << ":" << std::endl;
-    for (auto it = configuration.second.begin();
-         it != configuration.second.end();
+    std::cout << "Quorum size " << configuration.second.q2 << std::endl;
+    for (auto it = configuration.second.servers.begin();
+         it != configuration.second.servers.end();
          ++it) {
         std::cout << "- " << it->serverId << ": " << it->addresses
                   << std::endl;
@@ -197,7 +203,8 @@ main(int argc, char** argv)
 
     std::cout << "Attempting to change cluster membership to the following:"
               << std::endl;
-    Configuration servers;
+    Configuration config;
+    config.q2 = options.q2;
     for (auto it = options.servers.begin();
          it != options.servers.end();
          ++it) {
@@ -211,7 +218,7 @@ main(int argc, char** argv)
                           << info.addresses
                           << " (given as " << *it << ")"
                           << std::endl;
-                servers.emplace_back(info.serverId, info.addresses);
+                config.servers.emplace_back(info.serverId, info.addresses);
                 break;
             case Status::TIMEOUT:
                 std::cout << "Could not fetch server info from "
@@ -227,7 +234,7 @@ main(int argc, char** argv)
     }
     std::cout << std::endl;
 
-    ConfigurationResult result = cluster.setConfiguration(id, servers);
+    ConfigurationResult result = cluster.setConfiguration(id, config);
     std::cout << "Membership change result: ";
     if (result.status == ConfigurationResult::OK) {
         std::cout << "OK" << std::endl;
@@ -235,8 +242,8 @@ main(int argc, char** argv)
         std::cout << "CHANGED (" << result.error << ")" << std::endl;
     } else if (result.status == ConfigurationResult::BAD) {
         std::cout << "BAD SERVERS (" << result.error << "):" << std::endl;
-        for (auto it = result.badServers.begin();
-             it != result.badServers.end();
+        for (auto it = result.badServers.servers.begin();
+             it != result.badServers.servers.end();
              ++it) {
             std::cout << "- " << it->serverId << ": " << it->addresses
                       << std::endl;

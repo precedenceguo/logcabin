@@ -89,7 +89,11 @@ struct Server {
  * Defines the members of the cluster.
  * Used in Cluster::getConfiguration and Cluster::setConfiguration.
  */
-typedef std::vector<Server> Configuration;
+struct Configuration {
+    uint64_t q2;
+    std::vector<Server> servers;
+};
+// typedef std::vector<Server> Configuration;
 
 /**
  * Returned by Cluster::setConfiguration.
@@ -155,12 +159,12 @@ struct GetConfigurationResult {
      * If status is OK, identifies the configuration. Pass this to
      * setConfiguration later.
      */
-    uint64_t configuration;
+    uint64_t config_id;
 
     /**
      * If status is OK, the list of servers in the configuration.
      */
-    Configuration servers;
+    Configuration config;
 
     /**
      * Error message, if status is not OK.

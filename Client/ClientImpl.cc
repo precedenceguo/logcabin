@@ -496,10 +496,11 @@ ClientImpl::getConfiguration(TimePoint timeout)
     RPCStatus status = leaderRPC->call(
         OpCode::GET_CONFIGURATION, request, response, timeout);
     Configuration configuration;
+    configuration.q2 = response.q2();
     for (auto it = response.servers().begin();
          it != response.servers().end();
          ++it) {
-        configuration.push_back({it->server_id(), it->addresses()});
+        configuration.servers.push_back({it->server_id(), it->addresses()});
     }
     GetConfigurationResult result;
     if (status == RPCStatus::TIMEOUT) {
@@ -509,8 +510,8 @@ ClientImpl::getConfiguration(TimePoint timeout)
     } else {
         GetConfigurationResult configurationResult;
         result.status = GetConfigurationResult::Status::OK;
-        result.configuration = response.id();
-        result.servers = configuration;
+        result.config_id = response.id();
+        result.config = configuration;
         return result;
     }
 }
@@ -522,8 +523,8 @@ ClientImpl::setConfiguration(uint64_t oldId,
 {
     Protocol::Client::SetConfiguration::Request request;
     request.set_old_id(oldId);
-    for (auto it = newConfiguration.begin();
-         it != newConfiguration.end();
+    for (auto it = newConfiguration.servers.begin();
+         it != newConfiguration.servers.end();
          ++it) {
         Protocol::Client::Server* s = request.add_new_servers();
         s->set_server_id(it->serverId);
@@ -554,7 +555,7 @@ ClientImpl::setConfiguration(uint64_t oldId,
         for (auto it = response.configuration_bad().bad_servers().begin();
              it != response.configuration_bad().bad_servers().end();
              ++it) {
-            result.badServers.emplace_back(it->server_id(), it->addresses());
+            result.badServers.servers.emplace_back(it->server_id(), it->addresses());
         }
         result.error = "servers slow or unavailable";
         return result;

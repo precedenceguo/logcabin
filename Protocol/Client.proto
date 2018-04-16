@@ -182,9 +182,13 @@ message GetConfiguration {
          */
         required uint64 id = 1;
         /**
+         * Quorum 2 size
+         */
+        required uint64 q2 = 2;
+        /**
          * The list of servers in the configuration.
          */
-        repeated Server servers = 2;
+        repeated Server servers = 3;
     }
 }
 
@@ -198,9 +202,13 @@ message SetConfiguration {
          */
         required uint64 old_id = 1;
         /**
+         * Quorum 2 size
+         */
+        required uint64 q2 = 2;
+        /**
          * The list of servers in the new configuration.
          */
-        repeated Server new_servers = 2;
+        repeated Server new_servers = 3;
     }
     message Response {
         // The following are mutually exclusive.
@@ -213,7 +221,7 @@ message SetConfiguration {
             /**
              * The servers that were unavailable to join the cluster.
              */
-            repeated Server bad_servers = 1;
+            repeated Server bad_servers = 2;
         }
         /**
          * Set if the operation succeeded.

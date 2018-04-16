@@ -121,6 +121,7 @@ ClientService::getConfiguration(RPC::ServerRPC rpc)
         return;
     }
     response.set_id(id);
+    response.set_q2(configuration.q2());
     for (auto it = configuration.servers().begin();
          it != configuration.servers().end();
          ++it) {

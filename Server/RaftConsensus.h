@@ -500,6 +500,7 @@ class Configuration {
         uint64_t min(const GetValue& getValue) const;
         bool quorumAll(const Predicate& predicate) const;
         uint64_t quorumMin(const GetValue& getValue) const;
+        uint64_t q2;
         std::vector<ServerRef> servers;
     };
 

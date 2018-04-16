@@ -634,6 +634,7 @@ Configuration::setStagingServers(
 {
     assert(state == State::STABLE);
     state = State::STAGING;
+    newServers.q2 = stagingServers.q2();
     for (auto it = stagingServers.servers().begin();
          it != stagingServers.servers().end();
          ++it) {
@@ -1148,6 +1149,7 @@ RaftConsensus::bootstrapConfiguration()
     entry.set_cluster_time(0);
     Protocol::Raft::Configuration& configuration =
         *entry.mutable_configuration();
+    *configuration.mutable_prev_configuration()->set_q2(1);
     Protocol::Raft::Server& server =
         *configuration.mutable_prev_configuration()->add_servers();
     server.set_server_id(serverId);
@@ -1627,6 +1629,7 @@ RaftConsensus::setConfiguration(
 
     // Set the staging servers in the configuration.
     Protocol::Raft::SimpleConfiguration nextConfiguration;
+    nextConfiguration.set_q2(request.q2());
     for (auto it = request.new_servers().begin();
          it != request.new_servers().end();
          ++it) {

@@ -65,7 +65,7 @@ def main():
             host = smokehosts[server_id - 1]
             with open('smoketest-%d.conf' % server_id, 'w') as f:
                 f.write('serverId = %d\n' % server_id)
-                f.write('listenAddresses = %s\n' % host[0])
+                f.write('listenAddresses = %s\n' % host[1])
                 f.write('clusterUUID = %s\n' % cluster_uuid)
                 f.write('snapshotMinLogSize = 1024')
                 f.write('\n\n')

@@ -85,8 +85,8 @@ Server::operator=(const Server& other)
 
 GetConfigurationResult::GetConfigurationResult()
     : status(OK)
-    , configuration(0)
-    , servers()
+    , config_id(0)
+    , config()
     , error()
 {
 }
@@ -536,7 +536,7 @@ Cluster::getConfiguration() const
 {
     const uint64_t timeout(0);
     GetConfigurationResult r = getConfiguration2(timeout);
-    return std::make_pair(r.configuration, r.servers);
+    return std::make_pair(r.config_id, r.config);
 }
 
 GetConfigurationResult
