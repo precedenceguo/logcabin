@@ -404,7 +404,8 @@ Peer::updatePeerStats(Protocol::ServerStats::Raft::Peer& peerStats,
 ////////// Configuration::SimpleConfiguration //////////
 
 Configuration::SimpleConfiguration::SimpleConfiguration()
-    : servers()
+    : q2(0)
+    , servers()
 {
 }
 
@@ -1149,7 +1150,7 @@ RaftConsensus::bootstrapConfiguration()
     entry.set_cluster_time(0);
     Protocol::Raft::Configuration& configuration =
         *entry.mutable_configuration();
-    *configuration.mutable_prev_configuration()->set_q2(1);
+    configuration.mutable_prev_configuration()->set_q2(1);
     Protocol::Raft::Server& server =
         *configuration.mutable_prev_configuration()->add_servers();
     server.set_server_id(serverId);

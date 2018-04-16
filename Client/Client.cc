@@ -81,6 +81,16 @@ Server::operator=(const Server& other)
     return *this;
 }
 
+Configuration::Configuration()
+    : q2(0)
+    , servers()
+{
+}
+
+Configuration::~Configuration()
+{
+}
+
 ////////// GetConfigurationResult //////////
 
 GetConfigurationResult::GetConfigurationResult()

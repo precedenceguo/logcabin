@@ -92,6 +92,8 @@ struct Server {
 struct Configuration {
     uint64_t q2;
     std::vector<Server> servers;
+    Configuration();
+    ~Configuration();
 };
 // typedef std::vector<Server> Configuration;
 
