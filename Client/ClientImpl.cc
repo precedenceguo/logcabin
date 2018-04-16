@@ -523,6 +523,7 @@ ClientImpl::setConfiguration(uint64_t oldId,
 {
     Protocol::Client::SetConfiguration::Request request;
     request.set_old_id(oldId);
+    request.set_q2(newConfiguration.q2);
     for (auto it = newConfiguration.servers.begin();
          it != newConfiguration.servers.end();
          ++it) {

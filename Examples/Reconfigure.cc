@@ -68,6 +68,7 @@ class OptionParser {
                     break;
                 case 'q':
                     q2 = atol(optarg);
+                    break;
                 case 'h':
                     usage();
                     exit(0);
@@ -205,6 +206,7 @@ main(int argc, char** argv)
               << std::endl;
     Configuration config;
     config.q2 = options.q2;
+    std::cout << "new quorum 2 size " << config.q2 << std::endl;
     for (auto it = options.servers.begin();
          it != options.servers.end();
          ++it) {

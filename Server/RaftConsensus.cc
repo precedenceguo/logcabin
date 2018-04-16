@@ -1631,6 +1631,7 @@ RaftConsensus::setConfiguration(
     // Set the staging servers in the configuration.
     Protocol::Raft::SimpleConfiguration nextConfiguration;
     nextConfiguration.set_q2(request.q2());
+    NOTICE("Change quorum 2 size to %lu", request.q2());
     for (auto it = request.new_servers().begin();
          it != request.new_servers().end();
          ++it) {
