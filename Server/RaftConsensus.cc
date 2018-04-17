@@ -453,7 +453,7 @@ Configuration::SimpleConfiguration::min(const GetValue& getValue) const
 }
 
 bool
-Configuration::SimpleConfiguration::quorumAll(const Predicate& predicate) const
+Configuration::SimpleConfiguration::quorum1All(const Predicate& predicate) const
 {
     if (servers.empty())
         return true;
@@ -461,11 +461,12 @@ Configuration::SimpleConfiguration::quorumAll(const Predicate& predicate) const
     for (auto it = servers.begin(); it != servers.end(); ++it)
         if (predicate(**it))
             ++count;
-    return (count >= servers.size() / 2 + 1);
+    // NOTICE("Quorum 1 %d", count >= servers.size() + 1 - q2);
+    return (count >= servers.size() + 1 - q2);
 }
 
 uint64_t
-Configuration::SimpleConfiguration::quorumMin(const GetValue& getValue) const
+Configuration::SimpleConfiguration::quorum1Min(const GetValue& getValue) const
 {
     if (servers.empty())
         return 0;
@@ -473,7 +474,35 @@ Configuration::SimpleConfiguration::quorumMin(const GetValue& getValue) const
     for (auto it = servers.begin(); it != servers.end(); ++it)
         values.push_back(getValue(**it));
     std::sort(values.begin(), values.end());
-    return values.at((values.size() - 1)/ 2);
+    // NOTICE("quorum 1 %d %d", values.size(), q2);
+    assert(values.size() - q2 < values.size());
+    return values.at(values.size() - q2);  // q1 = N + 1 - q2; min is at q1 - 1
+}
+
+bool
+Configuration::SimpleConfiguration::quorum2All(const Predicate& predicate) const
+{
+    if (servers.empty())
+        return true;
+    uint64_t count = 0;
+    for (auto it = servers.begin(); it != servers.end(); ++it)
+        if (predicate(**it))
+            ++count;
+    return (count >= q2);
+}
+
+uint64_t
+Configuration::SimpleConfiguration::quorum2Min(const GetValue& getValue) const
+{
+    if (servers.empty())
+        return 0;
+    std::vector<uint64_t> values;
+    for (auto it = servers.begin(); it != servers.end(); ++it)
+        values.push_back(getValue(**it));
+    std::sort(values.begin(), values.end());
+    // NOTICE("quorum 2 %d %d", values.size(), q2);
+    assert(q2 - 1 < values.size());
+    return values.at(q2 - 1);
 }
 
 ////////// Configuration //////////
@@ -524,24 +553,46 @@ Configuration::lookupAddress(uint64_t serverId) const
 }
 
 bool
-Configuration::quorumAll(const Predicate& predicate) const
+Configuration::quorum1All(const Predicate& predicate) const
 {
     if (state == State::TRANSITIONAL) {
-        return (oldServers.quorumAll(predicate) &&
-                newServers.quorumAll(predicate));
+        return (oldServers.quorum1All(predicate) &&
+                newServers.quorum1All(predicate));
     } else {
-        return oldServers.quorumAll(predicate);
+        return oldServers.quorum1All(predicate);
     }
 }
 
 uint64_t
-Configuration::quorumMin(const GetValue& getValue) const
+Configuration::quorum1Min(const GetValue& getValue) const
 {
     if (state == State::TRANSITIONAL) {
-        return std::min(oldServers.quorumMin(getValue),
-                        newServers.quorumMin(getValue));
+        return std::min(oldServers.quorum1Min(getValue),
+                        newServers.quorum1Min(getValue));
     } else {
-        return oldServers.quorumMin(getValue);
+        return oldServers.quorum1Min(getValue);
+    }
+}
+
+bool
+Configuration::quorum2All(const Predicate& predicate) const
+{
+    if (state == State::TRANSITIONAL) {
+        return (oldServers.quorum2All(predicate) &&
+                newServers.quorum2All(predicate));
+    } else {
+        return oldServers.quorum2All(predicate);
+    }
+}
+
+uint64_t
+Configuration::quorum2Min(const GetValue& getValue) const
+{
+    if (state == State::TRANSITIONAL) {
+        return std::min(oldServers.quorum2Min(getValue),
+                        newServers.quorum2Min(getValue));
+    } else {
+        return oldServers.quorum2Min(getValue);
     }
 }
 
@@ -595,6 +646,7 @@ Configuration::setConfiguration(
     newServers.servers.clear();
 
     // Build up the list of old servers
+    oldServers.q2 = description.prev_configuration().q2();
     for (auto confIt = description.prev_configuration().servers().begin();
          confIt != description.prev_configuration().servers().end();
          ++confIt) {
@@ -604,6 +656,7 @@ Configuration::setConfiguration(
     }
 
     // Build up the list of new servers
+    newServers.q2 = description.next_configuration().q2();
     for (auto confIt = description.next_configuration().servers().begin();
          confIt != description.next_configuration().servers().end();
          ++confIt) {
@@ -2140,7 +2193,7 @@ RaftConsensus::stepDownThreadMain()
                 // in the configuration), we need to sleep. Without this guard,
                 // this method would not relinquish the CPU.
                 ++currentEpoch;
-                if (configuration->quorumMin(&Server::getLastAckEpoch) <
+                if (configuration->quorum1Min(&Server::getLastAckEpoch) <
                     currentEpoch) {
                     break;
                 }
@@ -2159,7 +2212,7 @@ RaftConsensus::stepDownThreadMain()
                 return;
             if (currentTerm > term)
                 break;
-            if (configuration->quorumMin(&Server::getLastAckEpoch) >= epoch)
+            if (configuration->quorum1Min(&Server::getLastAckEpoch) >= epoch)
                 break;
             if (Clock::now() >= stepDownAt) {
                 NOTICE("No broadcast for a timeout, stepping down from leader "
@@ -2187,7 +2240,7 @@ RaftConsensus::advanceCommitIndex()
 
     // calculate the largest entry ID stored on a quorum of servers
     uint64_t newCommitIndex =
-        configuration->quorumMin(&Server::getMatchIndex);
+        configuration->quorum2Min(&Server::getMatchIndex);
     if (commitIndex >= newCommitIndex)
         return;
     // If we have discarded the entry, it's because we already knew it was
@@ -2814,7 +2867,7 @@ RaftConsensus::requestVote(std::unique_lock<Mutex>& lockGuard, Peer& peer)
             peer.haveVote_ = true;
             NOTICE("Got vote from server %lu for term %lu",
                    peer.serverId, currentTerm);
-            if (configuration->quorumAll(&Server::haveVote))
+            if (configuration->quorum1All(&Server::haveVote))
                 becomeLeader();
         } else {
             NOTICE("Vote denied by server %lu for term %lu",
@@ -2904,7 +2957,7 @@ RaftConsensus::startNewElection()
     interruptAll();
 
     // if we're the only server, this election is already done
-    if (configuration->quorumAll(&Server::haveVote))
+    if (configuration->quorum1All(&Server::haveVote))
         becomeLeader();
 }
 
@@ -2977,7 +3030,7 @@ RaftConsensus::upToDateLeader(std::unique_lock<Mutex>& lockGuard) const
     while (true) {
         if (exiting || state != State::LEADER)
             return false;
-        if (configuration->quorumMin(&Server::getLastAckEpoch) >= epoch) {
+        if (configuration->quorum2Min(&Server::getLastAckEpoch) >= epoch) {
             // So we know we're the current leader, but do we have an
             // up-to-date commitIndex yet? What we'd like to check is whether
             // the entry's term at commitIndex matches our currentTerm, but

@@ -186,7 +186,7 @@ Invariants::checkBasic()
     // advanceCommitIndex is called everywhere it needs to be.
     if (consensus.state == RaftConsensus::State::LEADER) {
         uint64_t majorityEntry =
-            consensus.configuration->quorumMin(&Server::getMatchIndex);
+            consensus.configuration->quorum2Min(&Server::getMatchIndex);
         expect(consensus.commitIndex >= majorityEntry ||
                majorityEntry < consensus.log->getLogStartIndex() ||
                consensus.log->getEntry(majorityEntry).term() !=

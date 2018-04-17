@@ -221,7 +221,7 @@ message SetConfiguration {
             /**
              * The servers that were unavailable to join the cluster.
              */
-            repeated Server bad_servers = 2;
+            repeated Server bad_servers = 1;
         }
         /**
          * Set if the operation succeeded.

@@ -174,21 +174,21 @@ TEST_F(ServerRaftConsensusSimpleConfigurationTest, min) {
     EXPECT_EQ(1U, cfg.min(getServerId));
 }
 
-TEST_F(ServerRaftConsensusSimpleConfigurationTest, quorumAll) {
-    EXPECT_TRUE(emptyCfg.quorumAll(idHeart));
-    EXPECT_TRUE(oneCfg.all(idHeart));
-    EXPECT_TRUE(cfg.quorumAll(idHeart));
-    cfg.servers.push_back(makeServer(4));
-    EXPECT_FALSE(cfg.quorumAll(idHeart));
-}
-
-TEST_F(ServerRaftConsensusSimpleConfigurationTest, quorumMin) {
-    EXPECT_EQ(0U, emptyCfg.quorumMin(getServerId));
-    EXPECT_EQ(1U, oneCfg.quorumMin(getServerId));
-    EXPECT_EQ(2U, cfg.quorumMin(getServerId));
-    cfg.servers.pop_back();
-    EXPECT_EQ(1U, cfg.quorumMin(getServerId));
-}
+//TEST_F(ServerRaftConsensusSimpleConfigurationTest, quorumAll) {
+//    EXPECT_TRUE(emptyCfg.quorumAll(idHeart));
+//    EXPECT_TRUE(oneCfg.all(idHeart));
+//    EXPECT_TRUE(cfg.quorumAll(idHeart));
+//    cfg.servers.push_back(makeServer(4));
+//    EXPECT_FALSE(cfg.quorumAll(idHeart));
+//}
+//
+//TEST_F(ServerRaftConsensusSimpleConfigurationTest, quorumMin) {
+//    EXPECT_EQ(0U, emptyCfg.quorumMin(getServerId));
+//    EXPECT_EQ(1U, oneCfg.quorumMin(getServerId));
+//    EXPECT_EQ(2U, cfg.quorumMin(getServerId));
+//    cfg.servers.pop_back();
+//    EXPECT_EQ(1U, cfg.quorumMin(getServerId));
+//}
 
 class ServerRaftConsensusConfigurationTest
             : public ServerRaftConsensusSimpleConfigurationTest {
@@ -221,13 +221,13 @@ TEST_F(ServerRaftConsensusConfigurationTest, hasVote) {
     EXPECT_FALSE(cfg.hasVote(s2));
 }
 
-TEST_F(ServerRaftConsensusConfigurationTest, quorumAll) {
-    // TODO(ongaro): low-priority test
-}
-
-TEST_F(ServerRaftConsensusConfigurationTest, quorumMin) {
-    // TODO(ongaro): low-priority test
-}
+//TEST_F(ServerRaftConsensusConfigurationTest, quorumAll) {
+//    // TODO(ongaro): low-priority test
+//}
+//
+//TEST_F(ServerRaftConsensusConfigurationTest, quorumMin) {
+//    // TODO(ongaro): low-priority test
+//}
 
 // resetStagingServers tested at bottom of setStagingServers test
 

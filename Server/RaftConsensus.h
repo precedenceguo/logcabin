@@ -498,8 +498,10 @@ class Configuration {
         bool contains(ServerRef server) const;
         void forEach(const SideEffect& sideEffect);
         uint64_t min(const GetValue& getValue) const;
-        bool quorumAll(const Predicate& predicate) const;
-        uint64_t quorumMin(const GetValue& getValue) const;
+        bool quorum1All(const Predicate& predicate) const;
+        uint64_t quorum1Min(const GetValue& getValue) const;
+        bool quorum2All(const Predicate& predicate) const;
+        uint64_t quorum2Min(const GetValue& getValue) const;
         uint64_t q2;
         std::vector<ServerRef> servers;
     };
@@ -566,7 +568,7 @@ class Configuration {
      * Return true if there exists a quorum for which every server satisfies
      * the predicate, false otherwise.
      */
-    bool quorumAll(const Predicate& predicate) const;
+    bool quorum1All(const Predicate& predicate) const;
 
     /**
      * Return the smallest value of any server in the quorum of servers that
@@ -575,7 +577,22 @@ class Configuration {
      *      Largest value for which every server in a quorum has a value
      *      greater than or equal to this one. 0 if the configuration is BLANK.
      */
-    uint64_t quorumMin(const GetValue& getValue) const;
+    uint64_t quorum1Min(const GetValue& getValue) const;
+
+    /**
+     * Return true if there exists a quorum for which every server satisfies
+     * the predicate, false otherwise.
+     */
+    bool quorum2All(const Predicate& predicate) const;
+
+    /**
+     * Return the smallest value of any server in the quorum of servers that
+     * have the largest values.
+     * \return
+     *      Largest value for which every server in a quorum has a value
+     *      greater than or equal to this one. 0 if the configuration is BLANK.
+     */
+    uint64_t quorum2Min(const GetValue& getValue) const;
 
     /**
      * Remove the staging servers, if any. Return to the configuration state
